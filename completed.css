@@ -1,0 +1,182 @@
+/* Reset */
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+/* Body */
+body {
+  font-family: Arial, Helvetica, sans-serif;
+  background-color: #f4f7fb;
+  color: #1f2937;
+}
+
+/* Layout */
+.container {
+  display: flex;
+  min-height: 100vh;
+}
+
+/* Sidebar */
+.sidebar {
+  width: 240px;
+  background: linear-gradient(180deg, #111827 0%, #1f2937 100%);
+  color: #fff;
+  padding: 30px 20px;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.08);
+  display: flex;
+  flex-direction: column;
+}
+
+.nav-divider {
+  margin: 15px 0;
+  border: none;
+  height: 1px;
+  background-color: #374151;
+  opacity: 0.6;
+}
+.logo h2 {
+  font-size: 1.8rem;
+  margin-bottom: 40px;
+}
+
+/* Navigation */
+.nav-menu {
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+  flex: 1;
+}
+
+.nav-menu a {
+  text-decoration: none;
+  color: #d1d5db;
+  font-size: 1rem;
+  padding: 10px 12px;
+  border-radius: 8px;
+  transition: 0.3s;
+  display: block;
+}
+
+.nav-menu a:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+}
+
+.nav-menu a.active {
+  background: #2563eb;
+  color: #fff;
+}
+
+.logout-btn {
+  margin-top: auto;
+  background-color: #dc2626;
+  color: #fff !important;
+  text-align: center;
+  padding: 12px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.logout-btn:hover {
+  background-color: #b91c1c;
+  color: #fff !important;
+}
+
+/* Main content */
+.main-content {
+  flex: 1;
+  padding: 30px;
+}
+
+/* Header */
+.top-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 25px;
+}
+
+.top-header h1 {
+  font-size: 1.8rem;
+}
+
+.top-header p {
+  color: #6b7280;
+}
+
+/* Task list */
+.tasks-list {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+  gap: 20px;
+}
+
+/* Task card */
+.task-card {
+  background: #fff;
+  padding: 20px;
+  border-radius: 14px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.06);
+  transition: 0.3s;
+  border-left: 6px solid #10b981;
+}
+
+.task-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Task content */
+.task-card h3 {
+  margin-bottom: 10px;
+  color: #111827;
+}
+
+.task-card p {
+  font-size: 0.95rem;
+  margin-bottom: 6px;
+  color: #4b5563;
+}
+
+/* Empty message */
+.tasks-list p {
+  grid-column: 1 / -1;
+  text-align: center;
+  color: #9ca3af;
+  font-size: 1rem;
+  margin-top: 20px;
+}
+
+.task-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.action-btn {
+  display: inline-block;
+  padding: 10px 14px;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+  transition: 0.3s ease;
+}
+
+.restore-btn {
+  background-color: #16a34a;
+  color: #fff;
+}
+
+.restore-btn:hover {
+  background-color: #15803d;
+}
+
+.delete-btn {
+  background-color: #dc2626;
+  color: #fff;
+}
+
+.delete-btn:hover {
+  background-color: #b91c1c;
+}

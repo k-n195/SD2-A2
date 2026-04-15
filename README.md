@@ -198,6 +198,194 @@ Finally, it is worth noting that the project has successfully achieved its aim o
 Throughout the development process, key web development concepts were applied, including database integration, session management, and user interface design. The project also demonstrated an understanding of structured development approaches, with features being built and tested incrementally.
 All round, the final developed system meets both the user and system requirements and provides a solid foundation for further improvements. The project has also helped develop practical skills in full-stack web development and problem-solving.
 
+SPRINT 2 ONLY:
+
+## 11. Sprint 2 Updates
+
+This section outlines the improvements and additional features implemented during Sprint 2. These updates build upon the initial prototype developed in Sprint 1 and focus on improving functionality, usability, and system robustness.
+
+11.1 Overview of Changes
+
+During Sprint 2, the system was extended based on feedback and evaluation of the initial prototype. The focus was on enhancing user interaction, improving task organisation, and introducing more advanced functionality.
+
+The system evolved from a basic task manager into a more structured and user-friendly application with improved navigation and dynamic features.
+
+
+11.2 Key Features Implemented
+Preventing Past Date Entries:
+
+A validation system was implemented to prevent users from selecting a due date in the past.
+
+Frontend restriction using HTML date input
+Backend validation using PHP logic
+
+Impact:
+Improves data accuracy and prevents invalid task creation.
+
+Task Completion from Dashboard:
+
+Users can now mark tasks as completed directly from the homepage.
+
+Added “Mark Complete” buttons to dashboard and task previews
+Connected to backend update functionality
+
+Impact:
+Reduces navigation time and improves usability.
+
+Task Grouping by Deadline:
+
+Tasks are now grouped visually based on their due date.
+
+Dynamic headings added between tasks
+Separate grouping for tasks without a due date
+
+Impact:
+Improves clarity and organisation of task lists.
+
+Task Filtering by Priority:
+
+A filtering system was implemented to allow users to view tasks based on priority.
+
+Dropdown filter (High, Medium, Low)
+Dynamic SQL query modification
+
+Impact:
+Allows users to focus on important tasks more efficiently.
+
+Task Sorting (Earliest / Latest)
+
+A sorting toggle was implemented to allow users to switch between:
+
+Earliest deadlines first
+Latest deadlines first
+
+Impact:
+Provides flexibility and improves task management experience.
+
+Main Calendar Page:
+
+A full calendar page was developed to expand planning functionality.
+
+Displays tasks across a monthly view
+Allows navigation between months
+Highlights dates with tasks
+
+Impact:
+Provides a clearer visual overview and enhances planning capabilities.
+
+11.3 Design and Development Changes
+Frontend Changes
+Added filtering interface and sorting controls
+Improved layout consistency across pages
+Enhanced visual clarity through grouping and spacing
+Backend Changes
+Updated SQL queries to support filtering and sorting
+Implemented validation logic for task creation
+Improved handling of task status (active vs completed)
+
+11.4 Testing of New Features
+
+Each newly implemented feature was tested to ensure correct functionality.
+
+Past date validation tested using invalid inputs
+Filtering tested with different priority levels
+Sorting toggle tested for both ascending and descending order
+Calendar tested to ensure correct task display
+
+All issues identified during testing were resolved and re-tested.
+
+11.5 Summary of Sprint 2
+
+Sprint 2 significantly enhanced the system by improving usability, introducing dynamic features, and expanding the functionality of the planner. The system is now more interactive, flexible, and aligned with user requirements.
+
+11.6 Updated Scrum Backlog (Sprint 2)
+
+The Scrum backlog was updated during Sprint 2 to include new features and improvements based on evaluation of the initial prototype. Each feature was defined with clear functionality and tested to ensure it met system requirements.
+
+<img width="1600" height="600" alt="image" src="https://github.com/user-attachments/assets/435ba56e-0a95-4af9-86ee-d55fb1757206" />
+
+11.7 Project Management and Development Process
+
+The development of the project during Sprint 2 followed an Agile-inspired approach. The system was developed iteratively, with features implemented in stages, tested, and refined based on feedback.
+
+Regular development review sessions were conducted to track progress and identify issues. Each session focused on three key areas:
+
+What was completed since the last session
+What would be developed next
+Any problems or challenges encountered
+
+<img width="1000" height="400" alt="image" src="https://github.com/user-attachments/assets/721ef5e4-d6b8-4672-9917-4b743a1f2e5b" />
+
+Backlog Management
+
+High-priority features such as validation, filtering, and the calendar page were implemented first to ensure the core system improvements were completed within the sprint timeframe.
+
+Development Approach
+
+The project followed an incremental development approach:
+
+Identify feature or improvement
+Implement functionality
+Test using different inputs
+Fix any issues found
+Refine and improve
+
+This ensured that errors were identified early and the system remained stable throughout development.
+
+Progress Tracking
+
+Progress was tracked using a timeline and development logs. Each stage of development was recorded, allowing clear visibility of how the system evolved from the initial prototype to the final Sprint 2 version.
+
+Summary
+
+The use of an Agile-inspired approach allowed the project to remain flexible and responsive to issues. Regular reviews, testing, and incremental development ensured that all features were implemented successfully and met the system requirements.
+
+11.7.1 Burndown Chart (Sprint 2)
+
+The burndown chart below illustrates the progress made throughout Sprint 2 by showing the number of remaining tasks across each development session. The ideal line represents the expected rate of completion, while the actual line reflects the real progress achieved.
+
+<img width="2000" height="1200" alt="image" src="https://github.com/user-attachments/assets/d927d7cf-5449-470a-b995-64acf4c1c3c1" />
+
+
+
+
+The chart demonstrates consistent progress, with tasks being completed steadily over time. Minor deviations from the ideal trend highlight realistic development challenges, such as debugging and feature refinement, but overall confirm that the sprint was successfully managed and completed within the expected timeframe.
+
+11.8 Testing and Validation (Sprint 2)
+
+Testing was conducted throughout Sprint 2 to ensure that all implemented features met both user and system requirements. A combination of functional testing, validation testing, and bug fixing was used to verify the correctness, reliability, and usability of the system.
+
+<img width="1600" height="650" alt="image" src="https://github.com/user-attachments/assets/bbd8f631-f365-4f09-b235-a30c83fdc9d5" />
+
+11.8.2 Validation Testing
+
+Validation testing ensured that incorrect or invalid inputs were handled correctly.
+
+Empty input fields were tested to ensure required fields are enforced
+Invalid date inputs were tested to confirm restrictions on past dates
+Session handling was tested to ensure only authenticated users can access the system
+
+Outcome:
+All validation checks worked as expected, preventing incorrect or unauthorised input.
+
+11.8.3 Requirement Coverage
+
+The testing process ensured that all key user and system requirements were successfully met.
+
+Task creation, editing, and deletion were verified through functional testing
+Priority filtering and sorting features were tested to ensure usability improvements
+Date validation ensured that users cannot input invalid or past dates
+Session management testing confirmed secure access to user-specific data
+Calendar functionality was tested to ensure accurate visual representation of tasks
+
+These tests confirm that the system meets its original design specification and supports all intended user interactions effectively.
+
+11.8.4 Summary
+
+Testing confirmed that all Sprint 2 features function correctly and meet the defined requirements. The system is stable, reliable, and provides accurate outputs based on user interaction. Continuous testing and debugging ensured that issues were identified early and resolved efficiently.
+<img width="451" height="701" alt="image" src="https://github.com/user-attachments/assets/dfd17957-a3f6-46c5-8b0f-2717f8ae8bca" />
+
+
 
 
 

@@ -1,5 +1,7 @@
 # Personal Task Planner.
 
+SPRINT 1. SCROLL DOWN FOR SPRINT 2:
+
 ## 1. Introduction
 This project requires the design and development of a Personal Task Planner web application. The main aim of the system is to assist users in organizing, managing, and tracking their daily tasks in an efficient manner. This application enables the user to perform various tasks such as creating tasks, assigning priority levels, and tracking the tasks in a well-structured manner. This system was designed to solve the following problems: lack of organization in tasks, inability to meet deadlines, and lack of tracking of tasks that have been completed. By providing a clear interface, task list, and calendar view, the application enables the user to be productive and ensures that they are on top of their tasks. The target audience of the system includes students and people who need a simple and effective application to manage their tasks. The system was designed to be simple, efficient, and easy to use, such that the user can interact with the system without any advanced technical skills.
 Key features of the system include task creation, editing, deletion, completion tracking, and a calendar that visually highlights upcoming tasks. The system also includes user authentication to ensure that each user can securely manage their own tasks.
@@ -299,6 +301,8 @@ All issues identified during testing were resolved and re-tested.
 Sprint 2 significantly enhanced the system by improving usability, introducing dynamic features, and expanding the functionality of the planner. The system is now more interactive, flexible, and aligned with user requirements.
 
 11.6 Updated Scrum Backlog (Sprint 2)
+
+No tasks from sprint 1 have been backlogged as they have been completed and confirmed working. 
 
 The Scrum backlog was updated during Sprint 2 to include new features and improvements based on evaluation of the initial prototype. Each feature was defined with clear functionality and tested to ensure it met system requirements.
 

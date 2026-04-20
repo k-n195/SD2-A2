@@ -202,7 +202,7 @@ All round, the final developed system meets both the user and system requirement
 
 SPRINT 2 ONLY:
 
-## 11. Sprint 2 Updates
+# 11. Sprint 2 Updates
 
 This section outlines the improvements and additional features implemented during Sprint 2. These updates build upon the initial prototype developed in Sprint 1 and focus on improving functionality, usability, and system robustness.
 

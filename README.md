@@ -394,27 +394,3 @@ Testing confirmed that all Sprint 2 features function correctly and meet the def
 
 <img width="451" height="701" alt="image" src="https://github.com/user-attachments/assets/dfd17957-a3f6-46c5-8b0f-2717f8ae8bca" />
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-

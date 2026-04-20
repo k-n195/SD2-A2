@@ -310,6 +310,8 @@ The Scrum backlog was updated during Sprint 2 to include new features and improv
 
 <img width="1600" height="600" alt="image" src="https://github.com/user-attachments/assets/435ba56e-0a95-4af9-86ee-d55fb1757206" />
 
+There was no backlog of jobs remaining from sprint 1 as they had all been completed and confirmed working. 
+
 11.7 Project Management and Development Process
 
 The development of the project during Sprint 2 followed an Agile-inspired approach. The system was developed iteratively, with features implemented in stages, tested, and refined based on feedback.

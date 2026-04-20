@@ -275,6 +275,8 @@ Highlights dates with tasks
 Impact:
 Provides a clearer visual overview and enhances planning capabilities.
 
+While these features significantly improved usability and organisation, they also introduced additional complexity in backend processing. For example, implementing filtering and sorting required more advanced SQL query handling, which increased the risk of incorrect outputs if not carefully tested. Alternative approaches such as client-side filtering using JavaScript were considered; however, server-side processing using PHP was chosen to ensure data integrity and consistency across sessions. This highlights a trade-off between performance and reliability within the system design.
+
 11.3 Design and Development Changes
 Frontend Changes
 Added filtering interface and sorting controls

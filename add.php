@@ -9,28 +9,71 @@ if (!isset($_SESSION['user_id'])) {
 }
 
 $message = "";
+$messageType = "";
 $today = date('Y-m-d');
+
+$title = "";
+$description = "";
+$due_date = "";
+$priority = "";
+$category = "";
+$status = "";
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
     $user_id = $_SESSION['user_id'];
 
-    $title = mysqli_real_escape_string($conn, $_POST['title']);
-    $description = mysqli_real_escape_string($conn, $_POST['description']);
-    $due_date = mysqli_real_escape_string($conn, $_POST['due_date']);
-    $priority = mysqli_real_escape_string($conn, $_POST['priority']);
-    $category = mysqli_real_escape_string($conn, $_POST['category']);
-    $status = mysqli_real_escape_string($conn, $_POST['status']);
+    $title = trim($_POST['title'] ?? '');
+    $description = trim($_POST['description'] ?? '');
+    $due_date = trim($_POST['due_date'] ?? '');
+    $priority = trim($_POST['priority'] ?? '');
+    $category = trim($_POST['category'] ?? '');
+    $status = trim($_POST['status'] ?? '');
 
-    if (!empty($due_date) && $due_date < $today) {
+    if (empty($title) || empty($priority) || empty($category) || empty($status)) {
+        $message = "Please fill in all required fields.";
+        $messageType = "error";
+    } elseif (!empty($due_date) && $due_date < $today) {
         $message = "You cannot add a task in the past. Please select today or a future date.";
+        $messageType = "error";
     } else {
         $sql = "INSERT INTO tasks (user_id, title, description, due_date, priority, category, status)
-                VALUES ('$user_id', '$title', '$description', '$due_date', '$priority', '$category', '$status')";
+                VALUES (?, ?, ?, ?, ?, ?, ?)";
 
-        if (mysqli_query($conn, $sql)) {
-            $message = "Task added successfully.";
+        $stmt = mysqli_prepare($conn, $sql);
+
+        if ($stmt) {
+            mysqli_stmt_bind_param(
+                $stmt,
+                "issssss",
+                $user_id,
+                $title,
+                $description,
+                $due_date,
+                $priority,
+                $category,
+                $status
+            );
+
+            if (mysqli_stmt_execute($stmt)) {
+                $message = "Task added successfully.";
+                $messageType = "success";
+
+                // Clear form after success
+                $title = "";
+                $description = "";
+                $due_date = "";
+                $priority = "";
+                $category = "";
+                $status = "";
+            } else {
+                $message = "Error: " . mysqli_stmt_error($stmt);
+                $messageType = "error";
+            }
+
+            mysqli_stmt_close($stmt);
         } else {
-            $message = "Error: " . mysqli_error($conn);
+            $message = "Error preparing statement: " . mysqli_error($conn);
+            $messageType = "error";
         }
     }
 }
@@ -53,10 +96,11 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       </div>
 
       <nav class="nav-menu">
-        <a href="index.php" class="active">Dashboard</a>
-        <a href="add.php">Add Task</a>
+        <a href="index.php">Dashboard</a>
+        <a href="add.php" class="active">Add Task</a>
         <a href="completed.php">Completed Tasks</a>
         <a href="tasks.php">Tasks</a>
+        <a href="calendar.php">Calendar</a>
 
         <hr style="margin: 15px 0; border: 0.5px solid #374151;">
 
@@ -76,7 +120,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         <div class="form-card">
 
           <?php if (!empty($message)) : ?>
-            <p style="margin-bottom: 20px; font-weight: bold; color: <?php echo (strpos($message, 'successfully') !== false) ? '#16a34a' : '#dc2626'; ?>;">
+            <p style="margin-bottom: 20px; font-weight: bold; color: <?php echo ($messageType === 'success') ? '#16a34a' : '#dc2626'; ?>;">
               <?php echo htmlspecialchars($message); ?>
             </p>
           <?php endif; ?>
@@ -85,27 +129,45 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             
             <div class="form-group">
               <label for="title">Task Title</label>
-              <input type="text" id="title" name="title" placeholder="Enter task title" required>
+              <input
+                type="text"
+                id="title"
+                name="title"
+                placeholder="Enter task title"
+                value="<?php echo htmlspecialchars($title); ?>"
+                required
+              >
             </div>
 
             <div class="form-group">
               <label for="description">Description</label>
-              <textarea id="description" name="description" rows="5" placeholder="Enter task description"></textarea>
+              <textarea
+                id="description"
+                name="description"
+                rows="5"
+                placeholder="Enter task description"
+              ><?php echo htmlspecialchars($description); ?></textarea>
             </div>
 
             <div class="form-row">
               <div class="form-group">
                 <label for="due_date">Due Date</label>
-                <input type="date" id="due_date" name="due_date" min="<?php echo $today; ?>">
+                <input
+                  type="date"
+                  id="due_date"
+                  name="due_date"
+                  min="<?php echo $today; ?>"
+                  value="<?php echo htmlspecialchars($due_date); ?>"
+                >
               </div>
 
               <div class="form-group">
                 <label for="priority">Priority</label>
                 <select id="priority" name="priority" required>
                   <option value="">Select priority</option>
-                  <option value="high">High</option>
-                  <option value="medium">Medium</option>
-                  <option value="low">Low</option>
+                  <option value="high" <?php if ($priority === 'high') echo 'selected'; ?>>High</option>
+                  <option value="medium" <?php if ($priority === 'medium') echo 'selected'; ?>>Medium</option>
+                  <option value="low" <?php if ($priority === 'low') echo 'selected'; ?>>Low</option>
                 </select>
               </div>
             </div>
@@ -115,10 +177,10 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label for="category">Category</label>
                 <select id="category" name="category" required>
                   <option value="">Select category</option>
-                  <option value="study">Study</option>
-                  <option value="work">Work</option>
-                  <option value="personal">Personal</option>
-                  <option value="health">Health</option>
+                  <option value="study" <?php if ($category === 'study') echo 'selected'; ?>>Study</option>
+                  <option value="work" <?php if ($category === 'work') echo 'selected'; ?>>Work</option>
+                  <option value="personal" <?php if ($category === 'personal') echo 'selected'; ?>>Personal</option>
+                  <option value="health" <?php if ($category === 'health') echo 'selected'; ?>>Health</option>
                 </select>
               </div>
 
@@ -126,9 +188,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 <label for="status">Status</label>
                 <select id="status" name="status" required>
                   <option value="">Select status</option>
-                  <option value="pending">Pending</option>
-                  <option value="in_progress">In Progress</option>
-                  <option value="completed">Completed</option>
+                  <option value="pending" <?php if ($status === 'pending') echo 'selected'; ?>>Pending</option>
+                  <option value="in_progress" <?php if ($status === 'in_progress') echo 'selected'; ?>>In Progress</option>
+                  <option value="completed" <?php if ($status === 'completed') echo 'selected'; ?>>Completed</option>
                 </select>
               </div>
             </div>

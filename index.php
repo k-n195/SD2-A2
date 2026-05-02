@@ -10,6 +10,51 @@ if (!isset($_SESSION['user_id'])) {
 
 $userId = $_SESSION['user_id'];
 
+function getAdjustedPriority($dueDate, $originalPriority) {
+    if (empty($dueDate)) {
+        return strtolower($originalPriority);
+    }
+
+    $today = new DateTime(date('Y-m-d'));
+    $due = new DateTime($dueDate);
+
+    if ($due < $today) {
+        return 'high';
+    }
+
+    $daysLeft = (int)$today->diff($due)->days;
+
+    if ($daysLeft <= 1) {
+        return 'high';
+    } elseif ($daysLeft <= 3) {
+        return 'medium';
+    }
+
+    return strtolower($originalPriority);
+}
+
+function priorityWeight($priority) {
+    switch (strtolower($priority)) {
+        case 'high':
+            return 3;
+        case 'medium':
+            return 2;
+        default:
+            return 1;
+    }
+}
+
+function priorityBadgeClass($priority) {
+    switch (strtolower($priority)) {
+        case 'high':
+            return 'high-badge';
+        case 'medium':
+            return 'medium-badge';
+        default:
+            return 'low-badge';
+    }
+}
+
 $realCurrentMonth = (int) date('n');
 $realCurrentYear = (int) date('Y');
 $realCurrentDay = (int) date('j');
@@ -59,6 +104,7 @@ $completedTasks = mysqli_fetch_assoc($completedTasksQuery)['total'];
 $dueTodayQuery = mysqli_query($conn, "SELECT COUNT(*) AS total FROM tasks WHERE user_id = '$userId' AND due_date = '$todayDate' AND status != 'completed'");
 $dueToday = mysqli_fetch_assoc($dueTodayQuery)['total'];
 
+/* TASKS FOR SELECTED DAY */
 $tasksQuery = mysqli_query($conn, "
     SELECT * FROM tasks
     WHERE user_id = '$userId'
@@ -67,6 +113,23 @@ $tasksQuery = mysqli_query($conn, "
     ORDER BY created_at DESC
 ");
 
+$selectedDayTasks = [];
+while ($task = mysqli_fetch_assoc($tasksQuery)) {
+    $task['adjusted_priority'] = getAdjustedPriority($task['due_date'], $task['priority']);
+    $selectedDayTasks[] = $task;
+}
+
+usort($selectedDayTasks, function ($a, $b) {
+    $priorityCompare = priorityWeight($b['adjusted_priority']) - priorityWeight($a['adjusted_priority']);
+
+    if ($priorityCompare !== 0) {
+        return $priorityCompare;
+    }
+
+    return strcmp($b['created_at'], $a['created_at']);
+});
+
+/* DATES WITH TASKS FOR MINI CALENDAR */
 $monthTaskDates = [];
 $monthStart = sprintf('%04d-%02d-01', $currentYear, $currentMonth);
 $monthEnd = date('Y-m-t', strtotime($monthStart));
@@ -84,25 +147,32 @@ while ($row = mysqli_fetch_assoc($monthDatesQuery)) {
     $monthTaskDates[] = (int) $row['task_day'];
 }
 
+/* TODAY'S SCHEDULE */
 $todayTasksQuery = mysqli_query($conn, "
     SELECT * FROM tasks
     WHERE user_id = '$userId'
       AND due_date = '$todayDate'
       AND status != 'completed'
     ORDER BY created_at DESC
-    LIMIT 4
 ");
 
-function priorityBadgeClass($priority) {
-    switch ($priority) {
-        case 'high':
-            return 'high-badge';
-        case 'medium':
-            return 'medium-badge';
-        default:
-            return 'low-badge';
-    }
+$todayTasks = [];
+while ($todayTask = mysqli_fetch_assoc($todayTasksQuery)) {
+    $todayTask['adjusted_priority'] = getAdjustedPriority($todayTask['due_date'], $todayTask['priority']);
+    $todayTasks[] = $todayTask;
 }
+
+usort($todayTasks, function ($a, $b) {
+    $priorityCompare = priorityWeight($b['adjusted_priority']) - priorityWeight($a['adjusted_priority']);
+
+    if ($priorityCompare !== 0) {
+        return $priorityCompare;
+    }
+
+    return strcmp($b['created_at'], $a['created_at']);
+});
+
+$todayTasks = array_slice($todayTasks, 0, 4);
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -126,6 +196,7 @@ function priorityBadgeClass($priority) {
         <a href="add.php">Add Task</a>
         <a href="completed.php">Completed Tasks</a>
         <a href="tasks.php">Tasks</a>
+        <a href="calendar.php">Calendar</a>
 
         <hr style="margin: 15px 0; border: 0.5px solid #374151;">
 
@@ -176,25 +247,32 @@ function priorityBadgeClass($priority) {
             <a href="add.php" class="btn">+ New Task</a>
           </div>
 
-          <?php if (mysqli_num_rows($tasksQuery) > 0): ?>
-            <?php while ($task = mysqli_fetch_assoc($tasksQuery)): ?>
-              <a href="tasks.php" class="task-link">
-                <div class="task-item">
-                  <div>
-                    <h4><?php echo htmlspecialchars($task['title']); ?></h4>
-                    <p>
-                      Due: <?php echo !empty($task['due_date']) ? htmlspecialchars(date('j F Y', strtotime($task['due_date']))) : 'No date'; ?>
-                      <?php if (!empty($task['category'])): ?>
-                        | Category: <?php echo htmlspecialchars(ucfirst($task['category'])); ?>
-                      <?php endif; ?>
-                    </p>
-                  </div>
-                  <span class="priority <?php echo priorityBadgeClass($task['priority']); ?>">
-                    <?php echo htmlspecialchars(ucfirst($task['priority'])); ?>
-                  </span>
+          <?php if (count($selectedDayTasks) > 0): ?>
+            <?php foreach ($selectedDayTasks as $task): ?>
+              <div class="task-item">
+                <div>
+                  <h4><?php echo htmlspecialchars($task['title']); ?></h4>
+                  <p>
+                    Due: <?php echo !empty($task['due_date']) ? htmlspecialchars(date('j F Y', strtotime($task['due_date']))) : 'No date'; ?>
+                    <?php if (!empty($task['category'])): ?>
+                      | Category: <?php echo htmlspecialchars(ucfirst($task['category'])); ?>
+                    <?php endif; ?>
+                  </p>
                 </div>
-              </a>
-            <?php endwhile; ?>
+
+                <div style="display: flex; align-items: center; gap: 10px;">
+                  <span class="priority <?php echo priorityBadgeClass($task['adjusted_priority']); ?>">
+                    <?php echo htmlspecialchars(ucfirst($task['adjusted_priority'])); ?>
+                  </span>
+
+                  <a href="complete.php?id=<?php echo $task['id']; ?>" 
+                     class="btn"
+                     onclick="return confirm('Mark this task as completed?');">
+                    Complete
+                  </a>
+                </div>
+              </div>
+            <?php endforeach; ?>
           <?php else: ?>
             <div class="no-tasks">No tasks for this day.</div>
           <?php endif; ?>
@@ -205,13 +283,23 @@ function priorityBadgeClass($priority) {
           <div class="card schedule-panel">
             <h2>Today’s Schedule</h2>
             <ul>
-              <?php if (mysqli_num_rows($todayTasksQuery) > 0): ?>
-                <?php while ($todayTask = mysqli_fetch_assoc($todayTasksQuery)): ?>
-                  <li>
-                    <strong><?php echo htmlspecialchars(ucfirst($todayTask['priority'])); ?></strong>
-                    - <?php echo htmlspecialchars($todayTask['title']); ?>
+              <?php if (count($todayTasks) > 0): ?>
+                <?php foreach ($todayTasks as $todayTask): ?>
+                  <li style="margin-bottom: 12px;">
+                    <div style="display: flex; justify-content: space-between; align-items: center; gap: 10px; flex-wrap: wrap;">
+                      <span>
+                        <strong><?php echo htmlspecialchars(ucfirst($todayTask['adjusted_priority'])); ?></strong>
+                        - <?php echo htmlspecialchars($todayTask['title']); ?>
+                      </span>
+
+                      <a href="complete.php?id=<?php echo $todayTask['id']; ?>"
+                         class="btn"
+                         onclick="return confirm('Mark this task as completed?');">
+                        Complete
+                      </a>
+                    </div>
                   </li>
-                <?php endwhile; ?>
+                <?php endforeach; ?>
               <?php else: ?>
                 <li>No tasks scheduled for today.</li>
               <?php endif; ?>

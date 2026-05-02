@@ -76,6 +76,7 @@ if ($_SERVER['REQUEST_METHOD'] == 'POST') {
         <a href="add.php">Add Task</a>
         <a href="completed.php">Completed Tasks</a>
         <a href="tasks.php">Tasks</a>
+         <a href="calendar.php">Calendar</a>
 
         <hr style="margin: 15px 0; border: 0.5px solid #374151;">
 

@@ -52,6 +52,7 @@ function priorityBadgeClass($priority) {
                 <a href="add.php">Add Task</a>
                 <a href="completed.php" class="active">Completed Tasks</a>
                 <a href="tasks.php">Tasks</a>
+                <a href="calendar.php">Calendar</a>
 
                 <hr class="nav-divider">
 

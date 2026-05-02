@@ -12,8 +12,8 @@ date_default_timezone_set('Europe/London');
 $user_id = $_SESSION['user_id'];
 $user_name = $_SESSION['user_name'] ?? 'User';
 
-$month = isset($_GET['month']) ? (int)$_GET['month'] : date('m');
-$year = isset($_GET['year']) ? (int)$_GET['year'] : date('Y');
+$month = isset($_GET['month']) ? (int)$_GET['month'] : (int)date('m');
+$year = isset($_GET['year']) ? (int)$_GET['year'] : (int)date('Y');
 
 if ($month < 1) {
     $month = 12;
@@ -24,10 +24,10 @@ if ($month < 1) {
 }
 
 $firstDayOfMonth = mktime(0, 0, 0, $month, 1, $year);
-$daysInMonth = date('t', $firstDayOfMonth);
-$startDay = date('w', $firstDayOfMonth);
-
+$daysInMonth = (int)date('t', $firstDayOfMonth);
+$startDay = (int)date('w', $firstDayOfMonth);
 $monthName = date('F', $firstDayOfMonth);
+$currentDate = date('Y-m-d');
 
 $prevMonth = $month - 1;
 $prevYear = $year;
@@ -43,26 +43,23 @@ if ($nextMonth > 12) {
     $nextYear++;
 }
 
-$query = "SELECT id, title, due_date, priority 
-          FROM tasks 
-          WHERE user_id = ? 
+$query = "SELECT id, title, due_date, priority, status
+          FROM tasks
+          WHERE user_id = ?
+          AND due_date IS NOT NULL
           AND status != 'completed'
-          AND due_date IS NOT NULL";
+          ORDER BY due_date ASC, created_at DESC";
 
 $stmt = mysqli_prepare($conn, $query);
 mysqli_stmt_bind_param($stmt, "i", $user_id);
 mysqli_stmt_execute($stmt);
 $result = mysqli_stmt_get_result($stmt);
 
-$tasks = [];
+$tasksByDate = [];
 
 while ($row = mysqli_fetch_assoc($result)) {
-    $taskDate = $row['due_date'];
-    $tasks[$taskDate][] = [
-        'id' => $row['id'],
-        'title' => $row['title'],
-        'priority' => $row['priority']
-    ];
+    $date = $row['due_date'];
+    $tasksByDate[$date][] = $row;
 }
 ?>
 <!DOCTYPE html>
@@ -76,86 +73,127 @@ while ($row = mysqli_fetch_assoc($result)) {
 <body>
 
 <div class="container">
-    <div class="sidebar">
-        <h2>MyPlanner</h2>
-        <a href="index.php">Dashboard</a>
-        <a href="add.php">Add Task</a>
-        <a href="tasks.php">Tasks</a>
-        <a href="completed.php">Completed</a>
-        <a href="calendar.php" class="active">Calendar</a>
-        <a href="logout.php">Logout</a>
-    </div>
+    <aside class="sidebar">
+        <div class="brand">
+            <h2>MyPlanner</h2>
+            <p>Task Manager</p>
+        </div>
 
-    <div class="main">
-        <div class="top-bar">
+        <nav class="sidebar-nav">
+            <a href="index.php">Dashboard</a>
+            <a href="add.php">Add Task</a>
+            <a href="tasks.php">Tasks</a>
+            <a href="completed.php">Completed</a>
+            <a href="calendar.php" class="active">Calendar</a>
+        </nav>
+
+        <a href="logout.php" class="logout-btn">Logout</a>
+    </aside>
+
+    <main class="main-content">
+        <header class="topbar">
             <div>
                 <h1>Calendar</h1>
                 <p class="welcome-text">Welcome back, <?php echo htmlspecialchars($user_name); ?></p>
             </div>
-        </div>
+        </header>
 
-        <div class="calendar-wrapper">
+        <section class="calendar-section">
             <div class="calendar-header">
-                <h2><?php echo $monthName . " " . $year; ?></h2>
-                <div class="nav-buttons">
-                    <a href="?month=<?php echo $prevMonth; ?>&year=<?php echo $prevYear; ?>">← Previous</a>
-                    <a href="?month=<?php echo $nextMonth; ?>&year=<?php echo $nextYear; ?>">Next →</a>
+                <a class="month-btn" href="?month=<?php echo $prevMonth; ?>&year=<?php echo $prevYear; ?>">← Previous</a>
+
+                <div class="calendar-title-wrap">
+                    <h2><?php echo $monthName . ' ' . $year; ?></h2>
+                    <p>Full monthly view of your pending tasks</p>
                 </div>
+
+                <a class="month-btn" href="?month=<?php echo $nextMonth; ?>&year=<?php echo $nextYear; ?>">Next →</a>
             </div>
 
             <div class="calendar-grid">
-                <div class="day-name">Sunday</div>
-                <div class="day-name">Monday</div>
-                <div class="day-name">Tuesday</div>
-                <div class="day-name">Wednesday</div>
-                <div class="day-name">Thursday</div>
-                <div class="day-name">Friday</div>
-                <div class="day-name">Saturday</div>
+                <div class="day-label">Sun</div>
+                <div class="day-label">Mon</div>
+                <div class="day-label">Tue</div>
+                <div class="day-label">Wed</div>
+                <div class="day-label">Thu</div>
+                <div class="day-label">Fri</div>
+                <div class="day-label">Sat</div>
+
+                <?php for ($i = 0; $i < $startDay; $i++): ?>
+                    <div class="calendar-day empty"></div>
+                <?php endfor; ?>
+
+                <?php for ($day = 1; $day <= $daysInMonth; $day++): ?>
+                    <?php
+                        $fullDate = sprintf('%04d-%02d-%02d', $year, $month, $day);
+                        $isToday = ($fullDate === $currentDate);
+                    ?>
+                    <div class="calendar-day <?php echo $isToday ? 'today' : ''; ?>">
+                        <div class="day-top">
+                            <span class="day-number"><?php echo $day; ?></span>
+
+                            <?php if (!empty($tasksByDate[$fullDate])): ?>
+                                <div class="task-dots">
+                                    <?php
+                                    $dotCount = min(count($tasksByDate[$fullDate]), 4);
+                                    for ($d = 0; $d < $dotCount; $d++):
+                                    ?>
+                                        <span class="dot"></span>
+                                    <?php endfor; ?>
+                                </div>
+                            <?php endif; ?>
+                        </div>
+
+                        <div class="day-tasks">
+                            <?php if (!empty($tasksByDate[$fullDate])): ?>
+                                <?php foreach ($tasksByDate[$fullDate] as $task): ?>
+                                    <?php
+                                    $priorityClass = strtolower(trim($task['priority']));
+                                    if (!in_array($priorityClass, ['high', 'medium', 'low'])) {
+                                        $priorityClass = 'medium';
+                                    }
+                                    ?>
+                                    <a href="tasks.php" class="task-pill <?php echo $priorityClass; ?>">
+                                        <?php echo htmlspecialchars($task['title']); ?>
+                                    </a>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <span class="no-task">No tasks</span>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                <?php endfor; ?>
 
                 <?php
-                for ($i = 0; $i < $startDay; $i++) {
-                    echo '<div class="empty-cell"></div>';
-                }
+                $totalUsedCells = $startDay + $daysInMonth;
+                $remainingCells = (7 - ($totalUsedCells % 7)) % 7;
 
-                $today = date('Y-m-d');
-
-                for ($day = 1; $day <= $daysInMonth; $day++) {
-                    $date = sprintf('%04d-%02d-%02d', $year, $month, $day);
-                    $isToday = ($date === $today) ? 'today' : '';
-
-                    echo '<div class="day-cell ' . $isToday . '">';
-                    echo '<div class="day-number">' . $day . '</div>';
-
-                    if (isset($tasks[$date])) {
-                        foreach ($tasks[$date] as $task) {
-                            $priorityClass = strtolower($task['priority']);
-                            echo '<a class="task-item ' . htmlspecialchars($priorityClass) . '" href="tasks.php">';
-                            echo htmlspecialchars($task['title']);
-                            echo '</a>';
-                        }
-                    }
-
-                    echo '</div>';
-                }
-
-                $totalCells = $startDay + $daysInMonth;
-                $remainingCells = 7 - ($totalCells % 7);
-
-                if ($remainingCells < 7) {
-                    for ($i = 0; $i < $remainingCells; $i++) {
-                        echo '<div class="empty-cell"></div>';
-                    }
-                }
+                for ($i = 0; $i < $remainingCells; $i++):
                 ?>
+                    <div class="calendar-day empty"></div>
+                <?php endfor; ?>
             </div>
 
             <div class="legend">
-                <span><span class="dot high"></span> High Priority</span>
-                <span><span class="dot medium"></span> Medium Priority</span>
-                <span><span class="dot low"></span> Low Priority</span>
+                <div class="legend-item">
+                    <span class="legend-colour high"></span>
+                    <span>High Priority</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-colour medium"></span>
+                    <span>Medium Priority</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-colour low"></span>
+                    <span>Low Priority</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-colour today-legend"></span>
+                    <span>Today</span>
+                </div>
             </div>
-        </div>
-    </div>
+        </section>
+    </main>
 </div>
 
 </body>

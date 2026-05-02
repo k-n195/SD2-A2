@@ -7,24 +7,50 @@ if (!isset($_SESSION['user_id'])) {
     exit();
 }
 
+date_default_timezone_set('Europe/London');
+
 $userId = $_SESSION['user_id'];
 
-$sql = "SELECT * FROM tasks 
-        WHERE user_id = '$userId' 
-        AND status != 'completed'
-        ORDER BY 
-          CASE 
-            WHEN due_date IS NULL THEN 1 
-            ELSE 0 
-          END,
-          due_date ASC,
-          created_at DESC";
+// FILTER VALUES
+$priorityFilter = $_GET['priority'] ?? '';
+$sort = $_GET['sort'] ?? 'asc'; // default earliest first
 
-$result = mysqli_query($conn, $sql);
-$totalActiveTasks = mysqli_num_rows($result);
+function getAdjustedPriority($dueDate, $originalPriority) {
+    if (empty($dueDate)) {
+        return strtolower($originalPriority);
+    }
+
+    $today = new DateTime(date('Y-m-d'));
+    $due = new DateTime($dueDate);
+
+    if ($due < $today) {
+        return 'high';
+    }
+
+    $daysLeft = (int)$today->diff($due)->days;
+
+    if ($daysLeft <= 1) {
+        return 'high';
+    } elseif ($daysLeft <= 3) {
+        return 'medium';
+    }
+
+    return strtolower($originalPriority);
+}
+
+function priorityWeight($priority) {
+    switch (strtolower($priority)) {
+        case 'high':
+            return 3;
+        case 'medium':
+            return 2;
+        default:
+            return 1;
+    }
+}
 
 function priorityBadgeClass($priority) {
-    switch ($priority) {
+    switch (strtolower($priority)) {
         case 'high':
             return 'high-badge';
         case 'medium':
@@ -33,6 +59,70 @@ function priorityBadgeClass($priority) {
             return 'low-badge';
     }
 }
+
+// BASE QUERY
+$sql = "SELECT * FROM tasks 
+        WHERE user_id = '$userId' 
+        AND status != 'completed'";
+
+// APPLY PRIORITY FILTER LATER AFTER ADJUSTMENT IN PHP
+$sql .= " ORDER BY 
+          CASE 
+            WHEN due_date IS NULL THEN 1 
+            ELSE 0 
+          END,
+          due_date ASC,
+          created_at DESC";
+
+$result = mysqli_query($conn, $sql);
+
+$tasks = [];
+
+while ($row = mysqli_fetch_assoc($result)) {
+    $row['adjusted_priority'] = getAdjustedPriority($row['due_date'], $row['priority']);
+    $tasks[] = $row;
+}
+
+// APPLY FILTER USING ADJUSTED PRIORITY
+if (!empty($priorityFilter)) {
+    $tasks = array_filter($tasks, function ($task) use ($priorityFilter) {
+        return strtolower($task['adjusted_priority']) === strtolower($priorityFilter);
+    });
+}
+
+// SORT LOGIC
+usort($tasks, function ($a, $b) use ($sort) {
+    $aHasDate = !empty($a['due_date']);
+    $bHasDate = !empty($b['due_date']);
+
+    if (!$aHasDate && $bHasDate) {
+        return 1;
+    }
+    if ($aHasDate && !$bHasDate) {
+        return -1;
+    }
+
+    if ($aHasDate && $bHasDate) {
+        if ($a['due_date'] !== $b['due_date']) {
+            if ($sort === 'desc') {
+                return strcmp($b['due_date'], $a['due_date']);
+            }
+            return strcmp($a['due_date'], $b['due_date']);
+        }
+    }
+
+    $priorityCompare = priorityWeight($b['adjusted_priority']) - priorityWeight($a['adjusted_priority']);
+    if ($priorityCompare !== 0) {
+        return $priorityCompare;
+    }
+
+    return strcmp($b['created_at'], $a['created_at']);
+});
+
+$totalActiveTasks = count($tasks);
+
+// NEXT TOGGLE VALUE
+$nextSort = ($sort === 'asc') ? 'desc' : 'asc';
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -56,6 +146,7 @@ function priorityBadgeClass($priority) {
         <a href="add.php">Add Task</a>
         <a href="completed.php">Completed Tasks</a>
         <a href="tasks.php" class="active">Tasks</a>
+        <a href="calendar.php">Calendar</a>
 
         <hr style="margin: 15px 0; border: 0.5px solid #374151;">
 
@@ -81,11 +172,28 @@ function priorityBadgeClass($priority) {
             <a href="add.php" class="btn">+ Add New Task</a>
           </div>
 
+          <form method="GET" class="filter-form">
+            <select name="priority">
+              <option value="">All Priorities</option>
+              <option value="high" <?php if($priorityFilter=='high') echo 'selected'; ?>>High</option>
+              <option value="medium" <?php if($priorityFilter=='medium') echo 'selected'; ?>>Medium</option>
+              <option value="low" <?php if($priorityFilter=='low') echo 'selected'; ?>>Low</option>
+            </select>
+
+            <button type="submit" class="btn">Filter</button>
+
+            <a href="tasks.php" class="btn" style="background:#6b7280;">Reset</a>
+
+            <a href="tasks.php?sort=<?php echo $nextSort; ?>&priority=<?php echo urlencode($priorityFilter); ?>" class="btn">
+              Sort: <?php echo ($sort === 'asc') ? 'Earliest First' : 'Latest First'; ?>
+            </a>
+          </form>
+
           <?php if ($totalActiveTasks > 0): ?>
             <div class="task-list">
               <?php $lastDueDate = null; ?>
 
-              <?php while ($task = mysqli_fetch_assoc($result)): ?>
+              <?php foreach ($tasks as $task): ?>
                 <?php
                   $currentDueDate = !empty($task['due_date']) ? $task['due_date'] : 'no-date';
 
@@ -109,8 +217,8 @@ function priorityBadgeClass($priority) {
                   <div class="task-main">
                     <div class="task-top-row">
                       <h3><?php echo htmlspecialchars($task['title']); ?></h3>
-                      <span class="priority <?php echo priorityBadgeClass($task['priority']); ?>">
-                        <?php echo htmlspecialchars(ucfirst($task['priority'])); ?>
+                      <span class="priority <?php echo priorityBadgeClass($task['adjusted_priority']); ?>">
+                        <?php echo htmlspecialchars(ucfirst($task['adjusted_priority'])); ?>
                       </span>
                     </div>
 
@@ -135,7 +243,7 @@ function priorityBadgeClass($priority) {
                     </a>
                   </div>
                 </div>
-              <?php endwhile; ?>
+              <?php endforeach; ?>
             </div>
           <?php else: ?>
             <div class="empty-state">
